@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.min.css') }}">
+    <title>Clipboardium</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+          <a class="navbar-item" target="_blank" href="https://github.com/Gater73/Clipboardium">
+            <img src="{{ url_for('static', filename='images/Clipboardium.png') }}" />
+            <h1 class="column title">Clipboardium</h1>
+          </a>
+      
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <h1 class="is-link js-modal-trigger" data-target="modal-js-example" aria-hidden="true">?</h1>
+          </a>
+        </div>
+          </div>
+      
+          <div class="navbar-end">
+            <div class="navbar-item">
+              <div class="buttons">
+                <a class="button is-link js-modal-trigger" data-target="modal-js-example">
+                    About
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    <section class="section">
+        <div class="is-widescreen">
+            <p class="subtitle">Share your clipboard securely over the internet.</p>
+
+            <div class="field">
+                <label class="label">Enter Room Code</label>
+                <div class="control">
+                    <input class="input" type="text" id="room-code" placeholder="Enter room code or create one">
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <p class="control">
+                    <button class="button is-primary" id="create-room-btn">Create Room</button>
+                </p>
+                <p class="control">
+                    <button class="button is-link" id="join-room-btn">Join Room</button>
+                </p>
+            </div>
+
+            <div id="clipboard-section" style="display:none;">
+                <h2 class="subtitle">Shared Clipboard</h2>
+                <div class="field">
+                    <div class="control">
+                        <textarea class="textarea" id="clipboard-content" placeholder="Shared clipboard"></textarea>
+                    </div>
+                </div>
+                <button class="button is-primary" id="sync-btn">Sync Clipboard</button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        var socket = io();
+
+        document.getElementById('create-room-btn').addEventListener('click', function() {
+            socket.emit('create_room');
+        });
+
+        document.getElementById('join-room-btn').addEventListener('click', function() {
+            var roomCode = document.getElementById('room-code').value;
+            socket.emit('join_room', {room: roomCode});
+        });
+
+        socket.on('room_created', function(data) {
+            document.getElementById('room-code').value = data.room;
+            document.getElementById('clipboard-section').style.display = 'block';
+        });
+
+        socket.on('room_joined', function(data) {
+            if (data.success) {
+                document.getElementById('clipboard-section').style.display = 'block';
+            } else {
+                alert('Failed to join room');
+            }
+        });
+
+        document.getElementById('sync-btn').addEventListener('click', function() {
+            var clipboardContent = document.getElementById('clipboard-content').value;
+            var roomCode = document.getElementById('room-code').value;
+            socket.emit('sync_clipboard', {room: roomCode, clipboard_data: clipboardContent});
+        });
+
+        socket.on('clipboard_synced', function(data) {
+            socket.emit('decrypt_clipboard', {room: document.getElementById('room-code').value, encrypted_data: data.clipboard_data});
+        });
+
+        socket.on('clipboard_decrypted', function(data) {
+            document.getElementById('clipboard-content').value = data.decrypted_data;
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+        // Functions to open and close a modal
+        function openModal($el) {
+            $el.classList.add('is-active');
+        }
+
+        function closeModal($el) {
+            $el.classList.remove('is-active');
+        }
+
+        function closeAllModals() {
+            (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+            closeModal($modal);
+            });
+        }
+
+        // Add a click event on buttons to open a specific modal
+        (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+            const modal = $trigger.dataset.target;
+            const $target = document.getElementById(modal);
+
+            $trigger.addEventListener('click', () => {
+            openModal($target);
+            });
+        });
+
+        // Add a click event on various child elements to close the parent modal
+        (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+            const $target = $close.closest('.modal');
+
+            $close.addEventListener('click', () => {
+            closeModal($target);
+            });
+        });
+
+        // Add a keyboard event to close all modals
+        document.addEventListener('keydown', (event) => {
+            if(event.key === "Escape") {
+            closeAllModals();
+            }
+        });
+        });
+    
+    </script>
+<div id="modal-js-example" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+        <p class="modal-card-title">About</p>
+        <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+        <div class="column">
+            <div class="columns is-centered is-64x64">
+                <img src="{{ url_for('static', filename='images/github.png') }}" />
+            </div>
+            <div class="columns m-1 is-centered">
+                <a href="https://github.com/Gater73/Clipboardium" target="_blank" class="button is-link">Open project in github</a>
+            </div>
+        </div>
+        <div class="column">
+            <div class="columns is-centered is-64x64">
+                <img src="{{ url_for('static', filename='images/The_GNU_logo.png') }}" />
+            </div>
+            <div class="columns m-1 is-centered">
+                <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="button is-link">License</a>
+            </div>
+        </div>
+        </section>
+        <footer class="modal-card-foot">
+        </footer>
+    </div>
+</div>
+</body>
+</html>
