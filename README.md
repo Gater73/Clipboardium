@@ -41,6 +41,9 @@ Clipboardium is a secure clipboard sharing application designed to allow users t
 
 ## Usage
 
+## Warning
+> :warning: **USE A WSGI**: The in-transport security of Clipboardium relies on TLS/SSL encryption being enabled for the website! 
+
 1. Copy the text you want to share to your clipboard.
 2. Create a room and share the generated room code with another user.
 3. The second user can enter the room code to join the session.
