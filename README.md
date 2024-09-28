@@ -74,4 +74,4 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 
 ## Contact
 
-For any questions or inquiries, please reach out via [your email or contact method].
+For any questions or inquiries, please reach out via the issues tab or DM.
